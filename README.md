@@ -9,6 +9,7 @@
 - 複数フォルダからの画像読み込み
 - カスタマイズ可能な切り替えタイマー
 - シンプルな描画ツール（ペン、消しゴム）
+- Undo/Redo機能（Ctrl+Z / Ctrl+Y）
 - クロスプラットフォーム対応（Windows / macOS）
 
 ## システム要件
@@ -71,6 +72,11 @@ npm start
 - **Pen Size**: ペンの太さを調整（1-50px）
 - **Pen/Eraser**: ペンモードと消しゴムモードを切り替え
 - **Clear Canvas**: キャンバスをクリア
+
+#### キーボードショートカット
+- **Ctrl+Z** (Mac: Cmd+Z): 最後のストロークを取り消し（Undo）
+- **Ctrl+Y** (Mac: Cmd+Y): 取り消したストロークを復元（Redo）
+- **Ctrl+Shift+Z** (Mac: Cmd+Shift+Z): 取り消したストロークを復元（Redo）
 
 ## プロジェクト構成
 

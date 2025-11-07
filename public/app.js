@@ -14,6 +14,11 @@ let currentTool = 'pen';
 let penColor = '#000000';
 let penSize = 3;
 
+// Undo/Redo state
+let strokes = []; // All drawing strokes
+let redoStack = []; // Undone strokes for redo
+let currentStroke = null; // Current stroke being drawn
+
 // DOM elements
 const folderListEl = document.getElementById('folderList');
 const loadImagesBtn = document.getElementById('loadImagesBtn');
@@ -152,9 +157,8 @@ function resizeCanvas() {
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
 
-  // Clear canvas
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Redraw canvas with existing strokes
+  redrawCanvas();
 }
 
 // Next image
@@ -241,9 +245,7 @@ function setupCanvas() {
 
   // Handle window resize
   window.addEventListener('resize', () => {
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     resizeCanvas();
-    ctx.putImageData(imageData, 0, 0);
   });
 
   // Drawing events
@@ -287,6 +289,14 @@ function startDrawing(e) {
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
+  // Start a new stroke
+  currentStroke = {
+    points: [{x, y}],
+    color: penColor,
+    size: penSize,
+    tool: currentTool
+  };
+
   ctx.beginPath();
   ctx.moveTo(x, y);
 }
@@ -299,6 +309,11 @@ function draw(e) {
   const x = e.clientX - rect.left;
   const y = e.clientY - rect.top;
 
+  // Add point to current stroke
+  if (currentStroke) {
+    currentStroke.points.push({x, y});
+  }
+
   ctx.lineTo(x, y);
   ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : penColor;
   ctx.lineWidth = penSize;
@@ -309,6 +324,13 @@ function draw(e) {
 
 // Stop drawing
 function stopDrawing() {
+  if (isDrawing && currentStroke && currentStroke.points.length > 0) {
+    // Save the stroke to history
+    strokes.push(currentStroke);
+    // Clear redo stack when new stroke is added
+    redoStack = [];
+    currentStroke = null;
+  }
   isDrawing = false;
   ctx.beginPath();
 }
@@ -317,6 +339,59 @@ function stopDrawing() {
 function clearCanvas() {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Clear stroke history
+  strokes = [];
+  redoStack = [];
+  currentStroke = null;
+}
+
+// Undo last stroke
+function undo() {
+  if (strokes.length === 0) return;
+
+  // Move last stroke to redo stack
+  const lastStroke = strokes.pop();
+  redoStack.push(lastStroke);
+
+  // Redraw canvas
+  redrawCanvas();
+}
+
+// Redo last undone stroke
+function redo() {
+  if (redoStack.length === 0) return;
+
+  // Move stroke from redo stack back to strokes
+  const stroke = redoStack.pop();
+  strokes.push(stroke);
+
+  // Redraw canvas
+  redrawCanvas();
+}
+
+// Redraw all strokes on canvas
+function redrawCanvas() {
+  // Clear canvas
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Redraw all strokes
+  strokes.forEach(stroke => {
+    if (stroke.points.length === 0) return;
+
+    ctx.beginPath();
+    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+
+    for (let i = 1; i < stroke.points.length; i++) {
+      ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+    }
+
+    ctx.strokeStyle = stroke.tool === 'eraser' ? '#ffffff' : stroke.color;
+    ctx.lineWidth = stroke.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+  });
 }
 
 // Setup event listeners
@@ -350,6 +425,20 @@ function setupEventListeners() {
   clearBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to clear the canvas?')) {
       clearCanvas();
+    }
+  });
+
+  // Keyboard shortcuts for undo/redo
+  document.addEventListener('keydown', (e) => {
+    // Ctrl+Z or Cmd+Z for Undo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+    }
+    // Ctrl+Y or Cmd+Y or Ctrl+Shift+Z for Redo
+    else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      e.preventDefault();
+      redo();
     }
   });
 }
