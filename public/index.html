@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sketch Practice Tool</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Control Panel -->
+    <div class="control-panel">
+      <h1>Sketch Practice Tool</h1>
+
+      <div class="control-section">
+        <h3>Folder Selection</h3>
+        <div id="folderList" class="folder-list">
+          <p class="loading">Loading folders...</p>
+        </div>
+        <button id="loadImagesBtn" class="btn-primary">Load Images</button>
+      </div>
+
+      <div class="control-section">
+        <h3>Timer Settings</h3>
+        <label for="intervalInput">Switch Interval (seconds):</label>
+        <input type="number" id="intervalInput" min="1" max="300" value="30">
+        <button id="startTimerBtn" class="btn-primary">Start Auto-Switch</button>
+        <button id="stopTimerBtn" class="btn-secondary">Stop</button>
+        <button id="nextImageBtn" class="btn-secondary">Next Image</button>
+      </div>
+
+      <div class="control-section">
+        <h3>Drawing Tools</h3>
+        <div class="tool-group">
+          <label for="colorPicker">Pen Color:</label>
+          <input type="color" id="colorPicker" value="#000000">
+        </div>
+        <div class="tool-group">
+          <label for="penSizeSlider">Pen Size: <span id="penSizeValue">3</span>px</label>
+          <input type="range" id="penSizeSlider" min="1" max="50" value="3">
+        </div>
+        <div class="tool-group">
+          <button id="eraserBtn" class="btn-tool">Eraser</button>
+          <button id="penBtn" class="btn-tool active">Pen</button>
+          <button id="clearBtn" class="btn-danger">Clear Canvas</button>
+        </div>
+      </div>
+
+      <div class="status-section">
+        <p id="statusText">Select folders and load images to start</p>
+        <p id="imageCounter">0 / 0</p>
+        <p id="timerDisplay">--:--</p>
+      </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <div class="workspace">
+      <!-- Reference Image -->
+      <div class="panel reference-panel">
+        <h2>Reference</h2>
+        <div class="image-container">
+          <img id="referenceImage" src="" alt="Reference Image" style="display: none;">
+          <p id="noImageText" class="no-image">No image loaded</p>
+        </div>
+      </div>
+
+      <!-- Drawing Canvas -->
+      <div class="panel canvas-panel">
+        <h2>Your Drawing</h2>
+        <div class="canvas-container">
+          <canvas id="drawingCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
