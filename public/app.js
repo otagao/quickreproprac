@@ -303,8 +303,11 @@ function startDrawing(e) {
     tool: currentTool
   };
 
-  ctx.beginPath();
-  ctx.moveTo(x, y);
+  // Set drawing style
+  ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : penColor;
+  ctx.lineWidth = penSize;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
 }
 
 // Draw
@@ -316,16 +319,16 @@ function draw(e) {
   const y = e.clientY - rect.top;
 
   // Add point to current stroke
-  if (currentStroke) {
+  if (currentStroke && currentStroke.points.length > 0) {
+    const prevPoint = currentStroke.points[currentStroke.points.length - 1];
     currentStroke.points.push({x, y});
-  }
 
-  ctx.lineTo(x, y);
-  ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : penColor;
-  ctx.lineWidth = penSize;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.stroke();
+    // Draw line segment from previous point to current point
+    ctx.beginPath();
+    ctx.moveTo(prevPoint.x, prevPoint.y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  }
 }
 
 // Stop drawing
@@ -338,7 +341,6 @@ function stopDrawing() {
     currentStroke = null;
   }
   isDrawing = false;
-  ctx.beginPath();
 }
 
 // Clear canvas
