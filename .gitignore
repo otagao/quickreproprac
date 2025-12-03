@@ -24,10 +24,9 @@ desktop.ini
 .env
 .env.local
 
-# Reference images (optional - uncomment if you don't want to track images)
-# *.jpg
-# *.jpeg
-# *.png
-# *.gif
-# *.bmp
-# *.webp
+# CLAUDE.md
+CLAUDE.md
+
+# Reference images (exclude all files except README.txt)
+reference_images/*
+!reference_images/README.txt
