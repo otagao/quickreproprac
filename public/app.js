@@ -153,6 +153,12 @@ function resizeCanvas() {
     canvasWidth = containerHeight * aspectRatio;
   }
 
+  // Do not exceed original image dimensions
+  if (canvasWidth > img.naturalWidth || canvasHeight > img.naturalHeight) {
+    canvasWidth = img.naturalWidth;
+    canvasHeight = img.naturalHeight;
+  }
+
   // Set canvas dimensions
   canvas.width = canvasWidth;
   canvas.height = canvasHeight;
