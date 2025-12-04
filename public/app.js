@@ -14,6 +14,9 @@ let currentTool = 'pen';
 let penColor = '#000000';
 let penSize = 3;
 
+// Pen size preview state
+let showPenSizePreview = false;
+
 // Undo/Redo state
 let strokes = []; // All drawing strokes
 let redoStack = []; // Undone strokes for redo
@@ -402,6 +405,36 @@ function redrawCanvas() {
   });
 }
 
+// Draw pen size preview circle on canvas
+function drawPenSizePreview() {
+  // First redraw the canvas to clear previous preview
+  redrawCanvas();
+
+  // If preview is enabled, draw the circle
+  if (showPenSizePreview) {
+    ctx.save();
+
+    // Calculate canvas center
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Draw preview circle at center
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, penSize / 2, 0, Math.PI * 2);
+
+    // Draw outline
+    ctx.strokeStyle = currentTool === 'eraser' ? '#ff0000' : penColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Draw semi-transparent fill
+    ctx.fillStyle = currentTool === 'eraser' ? 'rgba(255, 0, 0, 0.2)' : penColor + '33';
+    ctx.fill();
+
+    ctx.restore();
+  }
+}
+
 // Setup event listeners
 function setupEventListeners() {
   loadImagesBtn.addEventListener('click', loadImages);
@@ -418,6 +451,18 @@ function setupEventListeners() {
   penSizeSlider.addEventListener('input', (e) => {
     penSize = parseInt(e.target.value);
     penSizeValue.textContent = penSize;
+    showPenSizePreview = true;
+    drawPenSizePreview();
+  });
+
+  penSizeSlider.addEventListener('mouseup', () => {
+    showPenSizePreview = false;
+    drawPenSizePreview();
+  });
+
+  penSizeSlider.addEventListener('mouseleave', () => {
+    showPenSizePreview = false;
+    drawPenSizePreview();
   });
 
   eraserBtn.addEventListener('click', () => {

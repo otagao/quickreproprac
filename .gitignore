@@ -24,8 +24,9 @@ desktop.ini
 .env
 .env.local
 
-# CLAUDE.md
+# CLAUDE
 CLAUDE.md
+.claude
 
 # Reference images (exclude all files except README.txt)
 reference_images/*
