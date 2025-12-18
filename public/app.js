@@ -59,11 +59,8 @@ async function loadFolders() {
     } else {
       folderListEl.innerHTML = '';
       folders.forEach(folder => {
-        const folderItem = document.createElement('div');
-        folderItem.className = 'folder-item';
-        folderItem.textContent = folder;
-        folderItem.addEventListener('click', () => toggleFolderSelection(folder, folderItem));
-        folderListEl.appendChild(folderItem);
+        const folderElement = createFolderElement(folder, 0);
+        folderListEl.appendChild(folderElement);
       });
     }
   } catch (error) {
@@ -72,14 +69,71 @@ async function loadFolders() {
   }
 }
 
+// Create hierarchical folder element
+function createFolderElement(folderObj, depth) {
+  const container = document.createElement('div');
+  container.className = 'folder-container';
+  container.style.marginLeft = `${depth * 20}px`;
+
+  const folderItem = document.createElement('div');
+  folderItem.className = 'folder-item';
+
+  // Add expand/collapse icon if folder has children
+  if (folderObj.children && folderObj.children.length > 0) {
+    const expandIcon = document.createElement('span');
+    expandIcon.className = 'expand-icon';
+    expandIcon.textContent = '▶';
+    folderItem.appendChild(expandIcon);
+  }
+
+  const nameSpan = document.createElement('span');
+  nameSpan.textContent = folderObj.name;
+  folderItem.appendChild(nameSpan);
+
+  // Click handler for selection
+  folderItem.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleFolderSelection(folderObj.path, folderItem);
+  });
+
+  container.appendChild(folderItem);
+
+  // Add children if they exist
+  if (folderObj.children && folderObj.children.length > 0) {
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'folder-children';
+    childrenContainer.style.display = 'none';
+
+    folderObj.children.forEach(child => {
+      const childElement = createFolderElement(child, depth + 1);
+      childrenContainer.appendChild(childElement);
+    });
+
+    container.appendChild(childrenContainer);
+
+    // Click handler for expand/collapse
+    const expandIcon = folderItem.querySelector('.expand-icon');
+    if (expandIcon) {
+      expandIcon.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = childrenContainer.style.display === 'block';
+        childrenContainer.style.display = isExpanded ? 'none' : 'block';
+        expandIcon.textContent = isExpanded ? '▶' : '▼';
+      });
+    }
+  }
+
+  return container;
+}
+
 // Toggle folder selection
-function toggleFolderSelection(folder, element) {
-  const index = selectedFolders.indexOf(folder);
+function toggleFolderSelection(folderPath, element) {
+  const index = selectedFolders.indexOf(folderPath);
   if (index > -1) {
     selectedFolders.splice(index, 1);
     element.classList.remove('selected');
   } else {
-    selectedFolders.push(folder);
+    selectedFolders.push(folderPath);
     element.classList.add('selected');
   }
 }

@@ -11,19 +11,54 @@ app.use(express.static('public'));
 // Serve images from the application directory
 app.use('/images', express.static('.'));
 
-// Get list of folders in the current directory
+// Recursively get folder structure
+function getFolderStructure(dir, basePath = '') {
+  const items = fs.readdirSync(dir, { withFileTypes: true });
+  const folders = [];
+
+  items.forEach(item => {
+    if (!item.isDirectory() || item.name.startsWith('.')) return;
+
+    const fullPath = path.join(basePath, item.name);
+    const itemPath = path.join(dir, item.name);
+
+    const folderObj = {
+      name: item.name,
+      path: fullPath,
+      children: getFolderStructure(itemPath, fullPath)
+    };
+
+    folders.push(folderObj);
+  });
+
+  return folders.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Get hierarchical folder structure
 app.get('/api/folders', (req, res) => {
   const currentDir = process.cwd();
 
   try {
     const items = fs.readdirSync(currentDir, { withFileTypes: true });
-    const folders = items
-      .filter(item => item.isDirectory())
-      .filter(item => !item.name.startsWith('.') && item.name !== 'node_modules' && item.name !== 'public')
-      .map(item => item.name)
-      .sort();
+    const rootFolders = [];
 
-    res.json(folders);
+    items.forEach(item => {
+      if (!item.isDirectory() || item.name.startsWith('.') ||
+          item.name === 'node_modules' || item.name === 'public') {
+        return;
+      }
+
+      const itemPath = path.join(currentDir, item.name);
+      const folderObj = {
+        name: item.name,
+        path: item.name,
+        children: getFolderStructure(itemPath, item.name)
+      };
+
+      rootFolders.push(folderObj);
+    });
+
+    res.json(rootFolders.sort((a, b) => a.name.localeCompare(b.name)));
   } catch (error) {
     console.error('Error reading folders:', error);
     res.status(500).json({ error: 'Failed to read folders' });
@@ -68,7 +103,10 @@ app.get('/api/images', (req, res) => {
       getImagesRecursive(folderPath);
     });
 
-    res.json(allImages);
+    // Remove duplicates using Set
+    const uniqueImages = [...new Set(allImages)];
+
+    res.json(uniqueImages);
   } catch (error) {
     console.error('Error reading images:', error);
     res.status(500).json({ error: 'Failed to read images' });

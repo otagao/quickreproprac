@@ -58,6 +58,10 @@ body {
   margin-bottom: 10px;
 }
 
+.folder-container {
+  margin: 2px 0;
+}
+
 .folder-item {
   padding: 6px 8px;
   margin: 4px 0;
@@ -65,6 +69,9 @@ body {
   border-radius: 3px;
   transition: background-color 0.2s;
   user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .folder-item:hover {
@@ -74,6 +81,18 @@ body {
 .folder-item.selected {
   background-color: #4a9eff;
   color: #000;
+}
+
+.expand-icon {
+  font-size: 10px;
+  display: inline-block;
+  width: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.folder-children {
+  margin-left: 0;
 }
 
 .loading {
