@@ -228,7 +228,17 @@ function resizeCanvas() {
 function nextImage() {
   if (images.length === 0) return;
 
-  currentImageIndex = (currentImageIndex + 1) % images.length;
+  // Check if we're at the last image
+  if (currentImageIndex >= images.length - 1) {
+    // If auto-switch is active, stop it instead of looping
+    if (timerInterval) {
+      stopTimer();
+      statusText.textContent = '全ての画像を表示しました';
+    }
+    return;
+  }
+
+  currentImageIndex++;
   displayCurrentImage();
 
   // Clear canvas when switching images
