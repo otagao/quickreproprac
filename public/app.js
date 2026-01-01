@@ -7,6 +7,11 @@ let timerInterval = null;
 let remainingTime = 0;
 let currentMode = 'image'; // 'image' or 'free'
 
+// Canvas saving state
+let savedCanvases = []; // Array to store saved canvas data URLs
+let switchCounter = 0; // Counter for switches in free mode
+let maxSwitches = 10; // Maximum switches in free mode
+
 // Canvas setup
 const canvas = document.getElementById('drawingCanvas');
 const ctx = canvas.getContext('2d');
@@ -35,6 +40,10 @@ const startTimerBtn = document.getElementById('startTimerBtn');
 const stopTimerBtn = document.getElementById('stopTimerBtn');
 const nextImageBtn = document.getElementById('nextImageBtn');
 const intervalInput = document.getElementById('intervalInput');
+const maxSwitchesInput = document.getElementById('maxSwitchesInput');
+const freeModeMaxSwitches = document.getElementById('freeModeMaxSwitches');
+const exportBtn = document.getElementById('exportBtn');
+const savedCount = document.getElementById('savedCount');
 const colorPicker = document.getElementById('colorPicker');
 const penSizeSlider = document.getElementById('penSizeSlider');
 const penSizeValue = document.getElementById('penSizeValue');
@@ -200,6 +209,7 @@ function switchMode(mode) {
     // Free mode: hide folder section, show timer, canvas only
     folderSection.style.display = 'none';
     timerSection.style.display = 'block';
+    freeModeMaxSwitches.style.display = 'block';
     workspace.classList.add('free-mode');
 
     // Update mode buttons
@@ -208,6 +218,11 @@ function switchMode(mode) {
 
     // Stop timer if running
     stopTimer();
+
+    // Reset switch counter and saved canvases
+    switchCounter = 0;
+    savedCanvases = [];
+    updateSavedCount();
 
     // Resize canvas to fixed square size
     resizeCanvasForFreeMode();
@@ -218,11 +233,17 @@ function switchMode(mode) {
     // Image mode: show folder/timer sections, show both panels
     folderSection.style.display = 'block';
     timerSection.style.display = 'block';
+    freeModeMaxSwitches.style.display = 'none';
     workspace.classList.remove('free-mode');
 
     // Update mode buttons
     imageModeBtn.classList.add('active');
     freeModeBtn.classList.remove('active');
+
+    // Reset switch counter and saved canvases
+    switchCounter = 0;
+    savedCanvases = [];
+    updateSavedCount();
 
     // Resize canvas to match reference image
     if (images.length > 0) {
@@ -283,15 +304,55 @@ function resizeCanvas() {
   redrawCanvas();
 }
 
+// Save current canvas before clearing (only when auto-switch is active)
+function saveCurrentCanvas() {
+  // Only save if auto-switch is active (timer is running)
+  if (!timerInterval) return;
+
+  // Check if canvas has any content (strokes)
+  if (strokes.length === 0) return;
+
+  // Save canvas as data URL
+  const dataURL = canvas.toDataURL('image/png');
+  savedCanvases.push(dataURL);
+  updateSavedCount();
+}
+
+// Update saved count display
+function updateSavedCount() {
+  savedCount.textContent = savedCanvases.length;
+  exportBtn.disabled = savedCanvases.length === 0;
+}
+
 // Next image or clear canvas (depending on mode)
 function nextImage() {
   if (currentMode === 'free') {
-    // In free mode, just clear the canvas
+    // In free mode, save canvas before clearing
+    saveCurrentCanvas();
+
+    // Increment switch counter
+    switchCounter++;
+
+    // Check if max switches reached
+    if (switchCounter >= maxSwitches) {
+      stopTimer();
+      statusText.textContent = `最大切り替え数（${maxSwitches}）に到達しました`;
+      imageCounter.textContent = `${switchCounter} / ${maxSwitches}`;
+      return;
+    }
+
+    // Update counter display
+    imageCounter.textContent = `${switchCounter} / ${maxSwitches}`;
+
+    // Clear the canvas
     clearCanvas();
     return;
   }
 
-  // Image mode: switch to next image
+  // Image mode: save canvas before switching
+  saveCurrentCanvas();
+
+  // Switch to next image
   if (images.length === 0) return;
 
   // Check if we're at the last image
@@ -325,6 +386,19 @@ function startTimer() {
   if (currentMode === 'image' && images.length === 0) {
     alert('Please load images first');
     return;
+  }
+
+  // In free mode, read max switches setting and reset counter
+  if (currentMode === 'free') {
+    maxSwitches = parseInt(maxSwitchesInput.value);
+    if (isNaN(maxSwitches) || maxSwitches < 1) {
+      alert('Please enter a valid max switches value (minimum 1)');
+      return;
+    }
+    switchCounter = 0;
+    savedCanvases = [];
+    updateSavedCount();
+    imageCounter.textContent = `${switchCounter} / ${maxSwitches}`;
   }
 
   remainingTime = interval;
@@ -638,6 +712,8 @@ function setupEventListeners() {
     }
   });
 
+  exportBtn.addEventListener('click', handleExport);
+
   // Keyboard shortcuts for undo/redo
   document.addEventListener('keydown', (e) => {
     // Ctrl+Z or Cmd+Z for Undo
@@ -663,4 +739,105 @@ function updateToolButtons() {
   } else {
     penBtn.classList.add('active');
   }
+}
+
+// Convert canvas data URL to square format (1:1 aspect ratio)
+function convertToSquare(dataURL) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      // Determine the size of the square (use the larger dimension)
+      const size = Math.max(img.width, img.height);
+
+      // Create a temporary canvas for the square image
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = size;
+      tempCanvas.height = size;
+      const tempCtx = tempCanvas.getContext('2d');
+
+      // Fill with white background
+      tempCtx.fillStyle = '#ffffff';
+      tempCtx.fillRect(0, 0, size, size);
+
+      // Calculate centering offsets
+      const offsetX = (size - img.width) / 2;
+      const offsetY = (size - img.height) / 2;
+
+      // Draw the image centered on the canvas
+      tempCtx.drawImage(img, offsetX, offsetY);
+
+      // Convert to data URL
+      resolve(tempCanvas.toDataURL('image/png'));
+    };
+    img.src = dataURL;
+  });
+}
+
+// Create a tiled grid image from saved canvases
+async function createTiledImage() {
+  if (savedCanvases.length === 0) {
+    alert('保存された模写がありません');
+    return;
+  }
+
+  // Convert all canvases to square format
+  const squareImages = await Promise.all(
+    savedCanvases.map(dataURL => convertToSquare(dataURL))
+  );
+
+  // Calculate grid dimensions (as square as possible)
+  const totalImages = squareImages.length;
+  const gridCols = Math.ceil(Math.sqrt(totalImages));
+  const gridRows = Math.ceil(totalImages / gridCols);
+
+  // Determine tile size (compress to reasonable size)
+  const tileSize = 400; // Each tile will be 400x400px
+
+  // Create final canvas
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = gridCols * tileSize;
+  finalCanvas.height = gridRows * tileSize;
+  const finalCtx = finalCanvas.getContext('2d');
+
+  // Fill background with white
+  finalCtx.fillStyle = '#ffffff';
+  finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+  // Load and draw each image
+  const imagePromises = squareImages.map((dataURL, index) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const col = index % gridCols;
+        const row = Math.floor(index / gridCols);
+        const x = col * tileSize;
+        const y = row * tileSize;
+
+        // Draw the image scaled to tile size
+        finalCtx.drawImage(img, x, y, tileSize, tileSize);
+        resolve();
+      };
+      img.src = dataURL;
+    });
+  });
+
+  await Promise.all(imagePromises);
+
+  // Convert to blob and download
+  finalCanvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').substring(0, 19);
+    link.download = `sketch-practice-${timestamp}.png`;
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    statusText.textContent = '画像をエクスポートしました';
+  }, 'image/png');
+}
+
+// Export button handler
+function handleExport() {
+  createTiledImage();
 }
