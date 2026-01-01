@@ -13,6 +13,14 @@
       <h1>Sketch Practice Tool</h1>
 
       <div class="control-section">
+        <h3>Practice Mode</h3>
+        <div class="mode-toggle">
+          <button id="imageModeBtn" class="btn-mode active">Image Mode</button>
+          <button id="freeModeBtn" class="btn-mode">Free Mode</button>
+        </div>
+      </div>
+
+      <div class="control-section" id="folderSection">
         <h3>Folder Selection</h3>
         <div id="folderList" class="folder-list">
           <p class="loading">Loading folders...</p>
@@ -20,7 +28,7 @@
         <button id="loadImagesBtn" class="btn-primary">Load Images</button>
       </div>
 
-      <div class="control-section">
+      <div class="control-section" id="timerSection">
         <h3>Timer Settings</h3>
         <label for="intervalInput">Switch Interval (seconds):</label>
         <input type="number" id="intervalInput" min="1" max="300" value="30">
@@ -54,9 +62,9 @@
     </div>
 
     <!-- Main Workspace -->
-    <div class="workspace">
+    <div class="workspace" id="workspace">
       <!-- Reference Image -->
-      <div class="panel reference-panel">
+      <div class="panel reference-panel" id="referencePanel">
         <h2>Reference</h2>
         <div class="image-container">
           <img id="referenceImage" src="" alt="Reference Image" style="display: none;">
@@ -65,7 +73,7 @@
       </div>
 
       <!-- Drawing Canvas -->
-      <div class="panel canvas-panel">
+      <div class="panel canvas-panel" id="canvasPanel">
         <h2>Your Drawing</h2>
         <div class="canvas-container">
           <canvas id="drawingCanvas"></canvas>

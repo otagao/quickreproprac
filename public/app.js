@@ -5,6 +5,7 @@ let images = [];
 let currentImageIndex = 0;
 let timerInterval = null;
 let remainingTime = 0;
+let currentMode = 'image'; // 'image' or 'free'
 
 // Canvas setup
 const canvas = document.getElementById('drawingCanvas');
@@ -23,6 +24,11 @@ let redoStack = []; // Undone strokes for redo
 let currentStroke = null; // Current stroke being drawn
 
 // DOM elements
+const imageModeBtn = document.getElementById('imageModeBtn');
+const freeModeBtn = document.getElementById('freeModeBtn');
+const folderSection = document.getElementById('folderSection');
+const timerSection = document.getElementById('timerSection');
+const workspace = document.getElementById('workspace');
 const folderListEl = document.getElementById('folderList');
 const loadImagesBtn = document.getElementById('loadImagesBtn');
 const startTimerBtn = document.getElementById('startTimerBtn');
@@ -186,6 +192,59 @@ function displayCurrentImage() {
   updateImageCounter();
 }
 
+// Switch between image mode and free mode
+function switchMode(mode) {
+  currentMode = mode;
+
+  if (mode === 'free') {
+    // Free mode: hide folder section, show timer, canvas only
+    folderSection.style.display = 'none';
+    timerSection.style.display = 'block';
+    workspace.classList.add('free-mode');
+
+    // Update mode buttons
+    imageModeBtn.classList.remove('active');
+    freeModeBtn.classList.add('active');
+
+    // Stop timer if running
+    stopTimer();
+
+    // Resize canvas to fixed square size
+    resizeCanvasForFreeMode();
+
+    statusText.textContent = 'Free Mode: 外部ウィンドウを模写';
+    imageCounter.textContent = '-- / --';
+  } else {
+    // Image mode: show folder/timer sections, show both panels
+    folderSection.style.display = 'block';
+    timerSection.style.display = 'block';
+    workspace.classList.remove('free-mode');
+
+    // Update mode buttons
+    imageModeBtn.classList.add('active');
+    freeModeBtn.classList.remove('active');
+
+    // Resize canvas to match reference image
+    if (images.length > 0) {
+      resizeCanvas();
+      statusText.textContent = `Loaded ${images.length} images`;
+    } else {
+      statusText.textContent = 'Select folders and load images to start';
+    }
+  }
+}
+
+// Resize canvas for free mode (fixed square)
+function resizeCanvasForFreeMode() {
+  // Set internal canvas resolution to fixed 1500x1500px
+  // CSS will handle responsive display sizing
+  canvas.width = 1500;
+  canvas.height = 1500;
+
+  // Redraw canvas with existing strokes
+  redrawCanvas();
+}
+
 // Resize canvas to match reference image aspect ratio
 function resizeCanvas() {
   const img = referenceImage;
@@ -224,8 +283,15 @@ function resizeCanvas() {
   redrawCanvas();
 }
 
-// Next image
+// Next image or clear canvas (depending on mode)
 function nextImage() {
+  if (currentMode === 'free') {
+    // In free mode, just clear the canvas
+    clearCanvas();
+    return;
+  }
+
+  // Image mode: switch to next image
   if (images.length === 0) return;
 
   // Check if we're at the last image
@@ -255,7 +321,8 @@ function startTimer() {
     return;
   }
 
-  if (images.length === 0) {
+  // In image mode, require images to be loaded
+  if (currentMode === 'image' && images.length === 0) {
     alert('Please load images first');
     return;
   }
@@ -273,7 +340,11 @@ function startTimer() {
     }
   }, 1000);
 
-  statusText.textContent = 'Auto-switch active';
+  if (currentMode === 'free') {
+    statusText.textContent = 'Auto-clear active';
+  } else {
+    statusText.textContent = 'Auto-switch active';
+  }
   startTimerBtn.disabled = true;
 }
 
@@ -282,7 +353,12 @@ function stopTimer() {
   if (timerInterval) {
     clearInterval(timerInterval);
     timerInterval = null;
-    statusText.textContent = 'Auto-switch stopped';
+
+    if (currentMode === 'free') {
+      statusText.textContent = 'Free Mode: 外部ウィンドウを模写';
+    } else {
+      statusText.textContent = 'Auto-switch stopped';
+    }
     startTimerBtn.disabled = false;
   }
   timerDisplay.textContent = '--:--';
@@ -314,11 +390,16 @@ function shuffleArray(array) {
 
 // Setup canvas
 function setupCanvas() {
-  resizeCanvas();
+  // Initialize with free mode canvas size
+  resizeCanvasForFreeMode();
 
   // Handle window resize
   window.addEventListener('resize', () => {
-    resizeCanvas();
+    if (currentMode === 'free') {
+      resizeCanvasForFreeMode();
+    } else {
+      resizeCanvas();
+    }
   });
 
   // Drawing events
@@ -355,12 +436,22 @@ function setupCanvas() {
   });
 }
 
+// Get canvas coordinates from mouse event (handles CSS scaling)
+function getCanvasCoordinates(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+
+  return {x, y};
+}
+
 // Start drawing
 function startDrawing(e) {
   isDrawing = true;
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const {x, y} = getCanvasCoordinates(e);
 
   // Start a new stroke
   currentStroke = {
@@ -381,9 +472,7 @@ function startDrawing(e) {
 function draw(e) {
   if (!isDrawing) return;
 
-  const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+  const {x, y} = getCanvasCoordinates(e);
 
   // Add point to current stroke
   if (currentStroke && currentStroke.points.length > 0) {
@@ -501,6 +590,10 @@ function drawPenSizePreview() {
 
 // Setup event listeners
 function setupEventListeners() {
+  // Mode switching
+  imageModeBtn.addEventListener('click', () => switchMode('image'));
+  freeModeBtn.addEventListener('click', () => switchMode('free'));
+
   loadImagesBtn.addEventListener('click', loadImages);
   startTimerBtn.addEventListener('click', startTimer);
   stopTimerBtn.addEventListener('click', stopTimer);
