@@ -61,6 +61,8 @@ document.addEventListener('DOMContentLoaded', () => {
   loadFolders();
   setupCanvas();
   setupEventListeners();
+  // Initialize Next Image button state
+  updateNextImageButtonState();
 });
 
 // Load folders from server
@@ -229,6 +231,12 @@ function switchMode(mode) {
 
     statusText.textContent = 'Free Mode: 外部ウィンドウを模写';
     imageCounter.textContent = '-- / --';
+
+    // Update button label for Free Mode
+    nextImageBtn.textContent = 'Next Canvas';
+
+    // Update Next Image button state
+    updateNextImageButtonState();
   } else {
     // Image mode: show folder/timer sections, show both panels
     folderSection.style.display = 'block';
@@ -252,6 +260,12 @@ function switchMode(mode) {
     } else {
       statusText.textContent = 'Select folders and load images to start';
     }
+
+    // Update button label for Image Mode
+    nextImageBtn.textContent = 'Next Image';
+
+    // Update Next Image button state
+    updateNextImageButtonState();
   }
 }
 
@@ -322,6 +336,12 @@ function saveCurrentCanvas() {
 function updateSavedCount() {
   savedCount.textContent = savedCanvases.length;
   exportBtn.disabled = savedCanvases.length === 0;
+}
+
+// Update Next Image button state based on drawing content
+function updateNextImageButtonState() {
+  // Disable button if there are no strokes (nothing drawn)
+  nextImageBtn.disabled = strokes.length === 0;
 }
 
 // Next image or clear canvas (depending on mode)
@@ -607,6 +627,8 @@ function stopDrawing() {
     // Clear redo stack when new stroke is added
     redoStack = [];
     currentStroke = null;
+    // Update Next Image button state
+    updateNextImageButtonState();
   }
   isDrawing = false;
 }
@@ -619,6 +641,8 @@ function clearCanvas() {
   strokes = [];
   redoStack = [];
   currentStroke = null;
+  // Update Next Image button state
+  updateNextImageButtonState();
 }
 
 // Undo last stroke
@@ -631,6 +655,9 @@ function undo() {
 
   // Redraw canvas
   redrawCanvas();
+
+  // Update Next Image button state
+  updateNextImageButtonState();
 }
 
 // Redo last undone stroke
@@ -643,6 +670,9 @@ function redo() {
 
   // Redraw canvas
   redrawCanvas();
+
+  // Update Next Image button state
+  updateNextImageButtonState();
 }
 
 // Redraw all strokes on canvas
