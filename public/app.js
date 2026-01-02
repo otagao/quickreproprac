@@ -344,6 +344,25 @@ function nextImage() {
     // Update counter display
     imageCounter.textContent = `${switchCounter} / ${maxSwitches}`;
 
+    // Reset timer if running
+    if (timerInterval) {
+      const interval = parseInt(intervalInput.value);
+      remainingTime = interval;
+      updateTimerDisplay();
+
+      // Restart the timer to reset the setInterval cycle
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        remainingTime--;
+        updateTimerDisplay();
+
+        if (remainingTime <= 0) {
+          nextImage();
+          remainingTime = interval;
+        }
+      }, 1000);
+    }
+
     // Clear the canvas
     clearCanvas();
     return;
@@ -367,6 +386,25 @@ function nextImage() {
 
   currentImageIndex++;
   displayCurrentImage();
+
+  // Reset timer if running
+  if (timerInterval) {
+    const interval = parseInt(intervalInput.value);
+    remainingTime = interval;
+    updateTimerDisplay();
+
+    // Restart the timer to reset the setInterval cycle
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      remainingTime--;
+      updateTimerDisplay();
+
+      if (remainingTime <= 0) {
+        nextImage();
+        remainingTime = interval;
+      }
+    }, 1000);
+  }
 
   // Clear canvas when switching images
   clearCanvas();
