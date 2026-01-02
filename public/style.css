@@ -193,6 +193,61 @@ button {
   margin-bottom: 10px;
 }
 
+/* Preset Buttons */
+.preset-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.btn-preset {
+  width: 100%;
+  padding: 8px 12px;
+  background-color: #1a1a1a;
+  border: 2px solid #3a3a3a;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.btn-preset:hover {
+  background-color: #2a2a2a;
+  border-color: #4a4a4a;
+}
+
+.btn-preset.active {
+  background-color: #2a4a6a;
+  border-color: #4a9eff;
+  box-shadow: 0 0 8px rgba(74, 158, 255, 0.3);
+}
+
+.preset-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b0b0b0;
+  margin-bottom: 4px;
+}
+
+.btn-preset.active .preset-label {
+  color: #4a9eff;
+}
+
+.preset-info {
+  font-size: 11px;
+  color: #808080;
+  font-family: monospace;
+}
+
+.btn-preset.active .preset-info {
+  color: #e0e0e0;
+}
+
 /* Inputs */
 input[type="number"],
 input[type="color"] {

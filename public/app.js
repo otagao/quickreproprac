@@ -23,6 +23,14 @@ let penSize = 3;
 // Pen size preview state
 let showPenSizePreview = false;
 
+// Pen presets state
+let penPresets = [
+  { color: '#000000', size: 3 },  // Preset 1: Default black, fine
+  { color: '#808080', size: 5 },  // Preset 2: Gray, medium
+  { color: '#000000', size: 2 }   // Preset 3: Black, very fine
+];
+let currentPreset = 0;
+
 // Undo/Redo state
 let strokes = []; // All drawing strokes
 let redoStack = []; // Undone strokes for redo
@@ -743,6 +751,9 @@ function setupEventListeners() {
 
   colorPicker.addEventListener('change', (e) => {
     penColor = e.target.value;
+    // Update current preset with new color
+    penPresets[currentPreset].color = penColor;
+    updatePresetInfo(currentPreset);
     currentTool = 'pen';
     updateToolButtons();
   });
@@ -750,6 +761,9 @@ function setupEventListeners() {
   penSizeSlider.addEventListener('input', (e) => {
     penSize = parseInt(e.target.value);
     penSizeValue.textContent = penSize;
+    // Update current preset with new size
+    penPresets[currentPreset].size = penSize;
+    updatePresetInfo(currentPreset);
     showPenSizePreview = true;
     drawPenSizePreview();
   });
@@ -782,7 +796,14 @@ function setupEventListeners() {
 
   exportBtn.addEventListener('click', handleExport);
 
-  // Keyboard shortcuts for undo/redo
+  // Preset buttons
+  document.querySelectorAll('.btn-preset').forEach((btn, index) => {
+    btn.addEventListener('click', () => {
+      switchPreset(index);
+    });
+  });
+
+  // Keyboard shortcuts for undo/redo and presets
   document.addEventListener('keydown', (e) => {
     // Ctrl+Z or Cmd+Z for Undo
     if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
@@ -793,6 +814,19 @@ function setupEventListeners() {
     else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
       e.preventDefault();
       redo();
+    }
+    // Number keys 1, 2, 3 for presets (only if not in input field)
+    else if (e.key === '1' && !e.target.matches('input, textarea')) {
+      e.preventDefault();
+      switchPreset(0);
+    }
+    else if (e.key === '2' && !e.target.matches('input, textarea')) {
+      e.preventDefault();
+      switchPreset(1);
+    }
+    else if (e.key === '3' && !e.target.matches('input, textarea')) {
+      e.preventDefault();
+      switchPreset(2);
     }
   });
 }
@@ -806,6 +840,49 @@ function updateToolButtons() {
     eraserBtn.classList.add('active');
   } else {
     penBtn.classList.add('active');
+  }
+}
+
+// Switch to a specific preset
+function switchPreset(presetIndex) {
+  if (presetIndex < 0 || presetIndex >= penPresets.length) return;
+
+  // Update current preset index
+  currentPreset = presetIndex;
+
+  // Load preset values
+  const preset = penPresets[presetIndex];
+  penColor = preset.color;
+  penSize = preset.size;
+
+  // Update UI elements
+  colorPicker.value = penColor;
+  penSizeSlider.value = penSize;
+  penSizeValue.textContent = penSize;
+
+  // Update preset button active states
+  document.querySelectorAll('.btn-preset').forEach((btn, idx) => {
+    if (idx === presetIndex) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+
+  // Switch to pen tool
+  currentTool = 'pen';
+  updateToolButtons();
+}
+
+// Update preset info display
+function updatePresetInfo(presetIndex) {
+  if (presetIndex < 0 || presetIndex >= penPresets.length) return;
+
+  const preset = penPresets[presetIndex];
+  const infoElement = document.getElementById(`presetInfo${presetIndex}`);
+
+  if (infoElement) {
+    infoElement.textContent = `${preset.color} / ${preset.size}px`;
   }
 }
 
