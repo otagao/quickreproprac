@@ -278,6 +278,13 @@ label {
   color: #b0b0b0;
 }
 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+}
+
 .tool-group {
   margin-bottom: 12px;
 }
@@ -385,6 +392,16 @@ label {
   background-color: #ffffff;
   cursor: crosshair;
   display: block;
+}
+
+.grid-overlay {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* Scrollbar styling */
