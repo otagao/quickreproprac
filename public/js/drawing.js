@@ -1,7 +1,7 @@
 import { state, PMIN } from './state.js';
-import { canvas, ctx, imageContainer } from './dom.js';
+import { canvas, ctx, imageContainer, referenceImage } from './dom.js';
 import { resizeCanvasForFreeMode, resizeCanvas, updateNextImageButtonState } from './images.js';
-import { applyCanvasViewTransform, applyCropClip, getBaseCoordinates, getCanvasPointFromClient, isTransformKeyActive, beginTransformGesture, updateTransformGesture, endTransformGesture, resetViewState, applyReferenceTransform, applyViewChange } from './transform.js';
+import { applyCanvasViewTransform, applyCropClip, getBaseCoordinates, getCanvasPointFromClient, isTransformKeyActive, beginTransformGesture, updateTransformGesture, endTransformGesture, resetViewState, applyReferenceTransform, applyViewChange, isPointInActiveCrop } from './transform.js';
 import { updateGridOverlays } from './grid.js';
 
 export function setupCanvas() {
@@ -31,6 +31,8 @@ export function setupCanvas() {
     imageContainer.addEventListener('pointerdown', (e) => {
       if (isTransformKeyActive()) {
         beginTransformGesture(e, imageContainer);
+      } else if (referenceImage.style.display !== 'none') {
+        beginTransformGesture(e, imageContainer, 'move');
       }
     });
     imageContainer.addEventListener('pointermove', updateTransformGesture);
@@ -102,9 +104,11 @@ export function startDrawing(e) {
     return;
   }
 
+  const {x, y} = getBaseCoordinates(e);
+  if (!isPointInActiveCrop(x, y)) return;
+
   canvas.setPointerCapture(e.pointerId);
   state.isDrawing = true;
-  const {x, y} = getBaseCoordinates(e);
   const pressure = getPressure(e);
 
   // Start a new stroke
@@ -129,6 +133,8 @@ export function draw(e) {
   if (!state.isDrawing) return;
 
   const {x, y} = getBaseCoordinates(e);
+  if (!isPointInActiveCrop(x, y)) return;
+
   const pressure = getPressure(e);
 
   // Add point to current stroke

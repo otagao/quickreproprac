@@ -377,6 +377,15 @@ label {
   position: relative;
 }
 
+.image-container {
+  cursor: grab;
+}
+
+.image-container:active,
+.image-container.grabbing {
+  cursor: grabbing;
+}
+
 #referenceImage {
   max-width: 100%;
   max-height: 100%;
