@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { imageModeBtn, freeModeBtn, langToggleBtn, loadImagesBtn, startTimerBtn, stopTimerBtn, nextImageBtn, colorPicker, penSizeSlider, penSizeValue, gridDivisionsInput, gridToggle, eraserBtn, penBtn, clearBtn, exportBtn } from './dom.js';
+import { imageModeBtn, freeModeBtn, langToggleBtn, loadImagesBtn, startTimerBtn, stopTimerBtn, nextImageBtn, penSizeSlider, penSizeValue, gridDivisionsInput, gridToggle, eraserBtn, penBtn, clearBtn, exportBtn } from './dom.js';
 import { loadImages } from './folders.js';
 import { switchMode, nextImage } from './images.js';
 import { startTimer, stopTimer } from './timer.js';
@@ -8,6 +8,7 @@ import { clearCanvas, undo, redo, drawPenSizePreview } from './drawing.js';
 import { handleExport } from './export.js';
 import { updateTransformKey } from './transform.js';
 import { getCurrentLang, setLanguage, t } from './i18n.js';
+import { setColorPickerValue } from './colorpicker.js';
 
 export function setupEventListeners() {
   // Mode switching
@@ -21,15 +22,6 @@ export function setupEventListeners() {
   startTimerBtn.addEventListener('click', startTimer);
   stopTimerBtn.addEventListener('click', stopTimer);
   nextImageBtn.addEventListener('click', nextImage);
-
-  colorPicker.addEventListener('change', (e) => {
-    state.penColor = e.target.value;
-    // Update current preset with new color
-    state.penPresets[state.currentPreset].color = state.penColor;
-    updatePresetInfo(state.currentPreset);
-    state.currentTool = 'pen';
-    updateToolButtons();
-  });
 
   penSizeSlider.addEventListener('input', (e) => {
     state.penSize = parseInt(e.target.value);
@@ -117,6 +109,15 @@ export function setupEventListeners() {
   });
 }
 
+export function handlePenColorChange(hexColor) {
+  state.penColor = hexColor;
+  // Update current preset with new color
+  state.penPresets[state.currentPreset].color = hexColor;
+  updatePresetInfo(state.currentPreset);
+  state.currentTool = 'pen';
+  updateToolButtons();
+}
+
 export function updateToolButtons() {
   eraserBtn.classList.remove('active');
   penBtn.classList.remove('active');
@@ -140,7 +141,7 @@ export function switchPreset(presetIndex) {
   state.penSize = preset.size;
 
   // Update UI elements
-  colorPicker.value = state.penColor;
+  setColorPickerValue(state.penColor);
   penSizeSlider.value = state.penSize;
   penSizeValue.textContent = state.penSize;
 
