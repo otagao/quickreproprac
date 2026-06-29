@@ -2,19 +2,20 @@ import { state } from './state.js';
 import { intervalInput, maxSwitchesInput, startTimerBtn, statusText, imageCounter, timerDisplay } from './dom.js';
 import { nextImage } from './images.js';
 import { updateSavedCount } from './export.js';
+import { t } from './i18n.js';
 
 export function startTimer() {
   stopTimer(); // Stop any existing timer
 
   const interval = parseInt(intervalInput.value);
   if (isNaN(interval) || interval < 1) {
-    alert('Please enter a valid interval (minimum 1 second)');
+    alert(t('invalidInterval'));
     return;
   }
 
   // In image mode, require state.images to be loaded
   if (state.currentMode === 'image' && state.images.length === 0) {
-    alert('Please load images first');
+    alert(t('loadImagesFirst'));
     return;
   }
 
@@ -22,7 +23,7 @@ export function startTimer() {
   if (state.currentMode === 'free') {
     state.maxSwitches = parseInt(maxSwitchesInput.value);
     if (isNaN(state.maxSwitches) || state.maxSwitches < 1) {
-      alert('Please enter a valid max switches value (minimum 1)');
+      alert(t('invalidMaxSwitches'));
       return;
     }
     state.switchCounter = 0;
@@ -45,9 +46,9 @@ export function startTimer() {
   }, 1000);
 
   if (state.currentMode === 'free') {
-    statusText.textContent = 'Auto-clear active';
+    statusText.textContent = t('autoClearActive');
   } else {
-    statusText.textContent = 'Auto-switch active';
+    statusText.textContent = t('autoSwitchActive');
   }
   startTimerBtn.disabled = true;
 }
@@ -58,9 +59,9 @@ export function stopTimer() {
     state.timerInterval = null;
 
     if (state.currentMode === 'free') {
-      statusText.textContent = 'Free Mode: 外部ウィンドウを模写';
+      statusText.textContent = t('freeModeLabel');
     } else {
-      statusText.textContent = 'Auto-switch stopped';
+      statusText.textContent = t('autoSwitchStopped');
     }
     startTimerBtn.disabled = false;
   }

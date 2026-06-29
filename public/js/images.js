@@ -4,6 +4,7 @@ import { resetViewState, applyViewChange } from './transform.js';
 import { stopTimer, updateTimerDisplay } from './timer.js';
 import { clearCanvas } from './drawing.js';
 import { saveCurrentCanvas, updateSavedCount } from './export.js';
+import { t } from './i18n.js';
 
 export function displayCurrentImage() {
   if (state.images.length === 0) return;
@@ -48,11 +49,11 @@ export function switchMode(mode) {
     // Resize canvas to fixed square size
     resizeCanvasForFreeMode();
 
-    statusText.textContent = 'Free Mode: 外部ウィンドウを模写';
+    statusText.textContent = t('freeModeLabel');
     imageCounter.textContent = '-- / --';
 
     // Update button label for Free Mode
-    nextImageBtn.textContent = 'Next Canvas';
+    nextImageBtn.textContent = t('nextCanvas');
 
     // Update Next Image button state
     updateNextImageButtonState();
@@ -75,13 +76,13 @@ export function switchMode(mode) {
     // Resize canvas to match reference image
     if (state.images.length > 0) {
       resizeCanvas();
-      statusText.textContent = `Loaded ${state.images.length} images`;
+      statusText.textContent = t('loadedImages', { n: state.images.length });
     } else {
-      statusText.textContent = 'Select folders and load images to start';
+      statusText.textContent = t('selectFoldersPrompt');
     }
 
     // Update button label for Image Mode
-    nextImageBtn.textContent = 'Next Image';
+    nextImageBtn.textContent = t('nextImage');
 
     // Update Next Image button state
     updateNextImageButtonState();
@@ -153,7 +154,7 @@ export function nextImage() {
     // Check if max switches reached
     if (state.switchCounter >= state.maxSwitches) {
       stopTimer();
-      statusText.textContent = `最大切り替え数（${state.maxSwitches}）に到達しました`;
+      statusText.textContent = t('maxSwitchesReached', { n: state.maxSwitches });
       imageCounter.textContent = `${state.switchCounter} / ${state.maxSwitches}`;
       return;
     }
@@ -196,7 +197,7 @@ export function nextImage() {
     // If auto-switch is active, stop it instead of looping
     if (state.timerInterval) {
       stopTimer();
-      statusText.textContent = '全ての画像を表示しました';
+      statusText.textContent = t('allImagesShown');
     }
     return;
   }
@@ -232,5 +233,31 @@ export function updateImageCounter() {
     imageCounter.textContent = `${state.currentImageIndex + 1} / ${state.images.length}`;
   } else {
     imageCounter.textContent = '0 / 0';
+  }
+}
+
+export function updateDynamicTexts() {
+  if (state.currentMode === 'free') {
+    nextImageBtn.textContent = t('nextCanvas');
+
+    if (state.switchCounter >= state.maxSwitches) {
+      statusText.textContent = t('maxSwitchesReached', { n: state.maxSwitches });
+    } else if (state.timerInterval) {
+      statusText.textContent = t('autoClearActive');
+    } else {
+      statusText.textContent = t('freeModeLabel');
+    }
+
+    return;
+  }
+
+  nextImageBtn.textContent = t('nextImage');
+
+  if (state.timerInterval) {
+    statusText.textContent = t('autoSwitchActive');
+  } else if (state.images.length > 0) {
+    statusText.textContent = t('loadedImages', { n: state.images.length });
+  } else {
+    statusText.textContent = t('selectFoldersPrompt');
   }
 }

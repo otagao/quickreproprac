@@ -3,95 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sketch Practice Tool</title>
+  <title>クロッキー練習ツール</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
     <!-- Control Panel -->
     <div class="control-panel">
-      <h1>Sketch Practice Tool</h1>
+      <h1 data-i18n="appTitle">クロッキー練習ツール</h1>
+      <button id="langToggleBtn" class="btn-secondary" type="button" data-i18n="langToggleToEn">English</button>
 
       <div class="control-section">
-        <h3>Practice Mode</h3>
+        <h3 data-i18n="practiceMode">練習モード</h3>
         <div class="mode-toggle">
-          <button id="imageModeBtn" class="btn-mode active">Image Mode</button>
-          <button id="freeModeBtn" class="btn-mode">Free Mode</button>
+          <button id="imageModeBtn" class="btn-mode active" data-i18n="imageMode">イメージモード</button>
+          <button id="freeModeBtn" class="btn-mode" data-i18n="freeMode">フリーモード</button>
         </div>
       </div>
 
       <div class="control-section" id="folderSection">
-        <h3>Folder Selection</h3>
+        <h3 data-i18n="folderSelection">フォルダ選択</h3>
         <div id="folderList" class="folder-list">
-          <p class="loading">Loading folders...</p>
+          <p class="loading" data-i18n="loadingFolders">フォルダを読み込み中...</p>
         </div>
-        <button id="loadImagesBtn" class="btn-primary">Load Images</button>
+        <button id="loadImagesBtn" class="btn-primary" data-i18n="loadImages">画像を読み込む</button>
       </div>
 
       <div class="control-section" id="timerSection">
-        <h3>Timer Settings</h3>
-        <label for="intervalInput">Switch Interval (seconds):</label>
+        <h3 data-i18n="timerSettings">タイマー設定</h3>
+        <label for="intervalInput" data-i18n="switchInterval">切替間隔（秒）:</label>
         <input type="number" id="intervalInput" min="1" max="300" value="30">
         <div id="freeModeMaxSwitches" style="display: none;">
-          <label for="maxSwitchesInput">Max Switches (Free Mode):</label>
+          <label for="maxSwitchesInput" data-i18n="maxSwitches">最大切替回数（フリーモード）:</label>
           <input type="number" id="maxSwitchesInput" min="1" max="100" value="10">
         </div>
-        <button id="startTimerBtn" class="btn-primary">Start Auto-Switch</button>
-        <button id="stopTimerBtn" class="btn-secondary">Stop</button>
-        <button id="nextImageBtn" class="btn-secondary">Next Image</button>
+        <button id="startTimerBtn" class="btn-primary" data-i18n="startAutoSwitch">自動切替を開始</button>
+        <button id="stopTimerBtn" class="btn-secondary" data-i18n="stop">停止</button>
+        <button id="nextImageBtn" class="btn-secondary" data-i18n="nextImage">次の画像</button>
       </div>
 
       <div class="control-section">
-        <h3>Drawing Tools</h3>
+        <h3 data-i18n="drawingTools">描画ツール</h3>
         <div class="tool-group">
-          <label>Pen Presets (1, 2, 3):</label>
+          <label data-i18n="penPresets">ペンプリセット (1, 2, 3):</label>
           <div class="preset-buttons">
             <button class="btn-preset active" data-preset="0">
-              <span class="preset-label">Preset 1</span>
+              <span class="preset-label" data-i18n="preset1">プリセット1</span>
               <span class="preset-info" id="presetInfo0">#000000 / 3px</span>
             </button>
             <button class="btn-preset" data-preset="1">
-              <span class="preset-label">Preset 2</span>
+              <span class="preset-label" data-i18n="preset2">プリセット2</span>
               <span class="preset-info" id="presetInfo1">#808080 / 5px</span>
             </button>
             <button class="btn-preset" data-preset="2">
-              <span class="preset-label">Preset 3</span>
+              <span class="preset-label" data-i18n="preset3">プリセット3</span>
               <span class="preset-info" id="presetInfo2">#000000 / 2px</span>
             </button>
           </div>
         </div>
         <div class="tool-group">
-          <label for="colorPicker">Pen Color:</label>
+          <label for="colorPicker" data-i18n="penColor">ペンの色:</label>
           <input type="color" id="colorPicker" value="#000000">
         </div>
         <div class="tool-group">
-          <label for="penSizeSlider">Pen Size: <span id="penSizeValue">3</span>px</label>
+          <label for="penSizeSlider"><span data-i18n="penSize">ペンのサイズ:</span> <span id="penSizeValue">3</span>px</label>
           <input type="range" id="penSizeSlider" min="1" max="50" value="3">
         </div>
         <div class="tool-group">
-          <label for="gridDivisionsInput">グリッド分割数（0=非表示）</label>
+          <label for="gridDivisionsInput" data-i18n="gridDivisions">グリッド分割数（0=非表示）</label>
           <input type="number" id="gridDivisionsInput" min="0" max="50" value="0">
           <label class="checkbox-label">
             <input type="checkbox" id="gridToggle">
-            グリッド表示
+            <span data-i18n="showGrid">グリッド表示</span>
           </label>
         </div>
         <div class="tool-group">
-          <button id="eraserBtn" class="btn-tool">Eraser</button>
-          <button id="penBtn" class="btn-tool active">Pen</button>
-          <button id="clearBtn" class="btn-danger">Clear Canvas</button>
+          <button id="eraserBtn" class="btn-tool" data-i18n="eraser">消しゴム</button>
+          <button id="penBtn" class="btn-tool active" data-i18n="pen">ペン</button>
+          <button id="clearBtn" class="btn-danger" data-i18n="clearCanvas">キャンバスをクリア</button>
         </div>
       </div>
 
       <div class="status-section">
-        <p id="statusText">Select folders and load images to start</p>
+        <p id="statusText" data-i18n="selectFoldersPrompt">フォルダを選択して画像を読み込んでください</p>
         <p id="imageCounter">0 / 0</p>
         <p id="timerDisplay">--:--</p>
       </div>
 
       <div class="control-section">
-        <button id="exportBtn" class="btn-primary" disabled>Export Saved Drawings</button>
-        <p id="exportInfo" style="font-size: 12px; color: #808080; margin-top: 8px;">保存された模写: <span id="savedCount">0</span></p>
+        <button id="exportBtn" class="btn-primary" disabled data-i18n="exportSavedDrawings">保存された模写をエクスポート</button>
+        <p id="exportInfo" style="font-size: 12px; color: #808080; margin-top: 8px;"><span data-i18n="savedDrawings">保存された模写:</span> <span id="savedCount">0</span></p>
+      </div>
+
+      <div class="control-section" style="font-size: 13px; line-height: 1.5;">
+        <h3 data-i18n="shortcuts">ショートカットキー</h3>
+        <ul style="margin: 0; padding-left: 18px;">
+          <li data-i18n="shortcutRotate">R + ドラッグ: リファレンス回転</li>
+          <li data-i18n="shortcutScale">S + ドラッグ: 拡大縮小</li>
+          <li data-i18n="shortcutCrop">C + ドラッグ: クロップ</li>
+          <li data-i18n="shortcutMove">Space + ドラッグ: 移動</li>
+          <li data-i18n="shortcutPreset">1 / 2 / 3: ペンプリセット切替</li>
+          <li data-i18n="shortcutUndo">Ctrl/Cmd+Z: 元に戻す</li>
+          <li data-i18n="shortcutRedo">Ctrl/Cmd+Y / Ctrl/Cmd+Shift+Z: やり直し</li>
+        </ul>
+        <p style="margin: 8px 0 0; color: #808080;" data-i18n="shortcutNote">※入力欄フォーカス中は変形ショートカット無効</p>
       </div>
     </div>
 
@@ -99,17 +114,17 @@
     <div class="workspace" id="workspace">
       <!-- Reference Image -->
       <div class="panel reference-panel" id="referencePanel">
-        <h2>Reference</h2>
+        <h2 data-i18n="reference">リファレンス</h2>
         <div class="image-container">
           <img id="referenceImage" src="" alt="Reference Image" style="display: none;">
           <canvas id="referenceGridCanvas" class="grid-overlay"></canvas>
-          <p id="noImageText" class="no-image">No image loaded</p>
+          <p id="noImageText" class="no-image" data-i18n="noImageLoaded">画像が読み込まれていません</p>
         </div>
       </div>
 
       <!-- Drawing Canvas -->
       <div class="panel canvas-panel" id="canvasPanel">
-        <h2>Your Drawing</h2>
+        <h2 data-i18n="yourDrawing">あなたの描画</h2>
         <div class="canvas-container">
           <canvas id="drawingCanvas"></canvas>
           <canvas id="drawingGridCanvas" class="grid-overlay"></canvas>

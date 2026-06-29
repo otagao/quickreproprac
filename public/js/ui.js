@@ -1,5 +1,5 @@
 import { state } from './state.js';
-import { imageModeBtn, freeModeBtn, loadImagesBtn, startTimerBtn, stopTimerBtn, nextImageBtn, colorPicker, penSizeSlider, penSizeValue, gridDivisionsInput, gridToggle, eraserBtn, penBtn, clearBtn, exportBtn } from './dom.js';
+import { imageModeBtn, freeModeBtn, langToggleBtn, loadImagesBtn, startTimerBtn, stopTimerBtn, nextImageBtn, colorPicker, penSizeSlider, penSizeValue, gridDivisionsInput, gridToggle, eraserBtn, penBtn, clearBtn, exportBtn } from './dom.js';
 import { loadImages } from './folders.js';
 import { switchMode, nextImage } from './images.js';
 import { startTimer, stopTimer } from './timer.js';
@@ -7,11 +7,15 @@ import { getGridDivisions, updateGridOverlays } from './grid.js';
 import { clearCanvas, undo, redo, drawPenSizePreview } from './drawing.js';
 import { handleExport } from './export.js';
 import { updateTransformKey } from './transform.js';
+import { getCurrentLang, setLanguage, t } from './i18n.js';
 
 export function setupEventListeners() {
   // Mode switching
   imageModeBtn.addEventListener('click', () => switchMode('image'));
   freeModeBtn.addEventListener('click', () => switchMode('free'));
+  langToggleBtn.addEventListener('click', () => {
+    setLanguage(getCurrentLang() === 'ja' ? 'en' : 'ja');
+  });
 
   loadImagesBtn.addEventListener('click', loadImages);
   startTimerBtn.addEventListener('click', startTimer);
@@ -65,7 +69,7 @@ export function setupEventListeners() {
   });
 
   clearBtn.addEventListener('click', () => {
-    if (confirm('Are you sure you want to clear the canvas?')) {
+    if (confirm(t('confirmClear'))) {
       clearCanvas();
     }
   });

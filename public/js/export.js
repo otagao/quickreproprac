@@ -1,5 +1,6 @@
 import { state } from './state.js';
 import { canvas, savedCount, exportBtn, statusText } from './dom.js';
+import { t } from './i18n.js';
 
 export function saveCurrentCanvas() {
   // Only save if auto-switch is active (timer is running)
@@ -52,7 +53,7 @@ export function convertToSquare(dataURL) {
 
 export async function createTiledImage() {
   if (state.savedCanvases.length === 0) {
-    alert('保存された模写がありません');
+    alert(t('noSavedDrawings'));
     return;
   }
 
@@ -109,7 +110,7 @@ export async function createTiledImage() {
     link.click();
     URL.revokeObjectURL(url);
 
-    statusText.textContent = '画像をエクスポートしました';
+    statusText.textContent = t('exportComplete');
   }, 'image/png');
 }
 
