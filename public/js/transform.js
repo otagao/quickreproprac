@@ -1,9 +1,11 @@
 import { state } from './state.js';
 import { canvas, ctx, referenceImage, imageContainer } from './dom.js';
 import { clamp } from './utils.js';
-import { getCanvasCoordinates, redrawCanvas } from './drawing.js';
+import { redrawCanvas } from './drawing.js';
 import { updateGridOverlays } from './grid.js';
 import { updateNextImageButtonState } from './images.js';
+
+let cropOverlay = null;
 
 export function cloneViewState(src = state.viewState) {
   return structuredClone(src);
@@ -20,17 +22,8 @@ export function resetViewState() {
 }
 
 export function applyCanvasViewTransform() {
-  const w = canvas.width;
-  const h = canvas.height;
-  const cx = w / 2;
-  const cy = h / 2;
-  const offPxX = state.viewState.offsetX * w;
-  const offPxY = state.viewState.offsetY * h;
-
-  ctx.translate(cx + offPxX, cy + offPxY);
-  ctx.rotate(state.viewState.rotation);
-  ctx.scale(state.viewState.scale, state.viewState.scale);
-  ctx.translate(-cx, -cy);
+  // The visible view transform is applied to the canvas element itself so the
+  // white canvas frame, grid and strokes share exactly one transform.
 }
 
 export function applyCropClip() {
@@ -63,23 +56,33 @@ export function inverseViewTransform(xd, yd) {
 }
 
 export function getBaseCoordinates(e) {
-  const {x, y} = getCanvasCoordinates(e);
-  return inverseViewTransform(x, y);
+  return getCanvasPointFromClient(e.clientX, e.clientY);
 }
 
-export function applyViewTransformToElement(el) {
-  if (!el) return;
+export function getViewTransformCss() {
+  return `translate(${state.viewState.offsetX * 100}%, ${state.viewState.offsetY * 100}%) rotate(${state.viewState.rotation}rad) scale(${state.viewState.scale})`;
+}
+
+export function getCropClipPath() {
   const cr = state.viewState.cropRect;
-  el.style.transformOrigin = 'center center';
-  el.style.transform =
-    `translate(${state.viewState.offsetX * 100}%, ${state.viewState.offsetY * 100}%) rotate(${state.viewState.rotation}rad) scale(${state.viewState.scale})`;
-  el.style.clipPath = cr
+  return cr
     ? `inset(${cr.y * 100}% ${(1 - (cr.x + cr.w)) * 100}% ${(1 - (cr.y + cr.h)) * 100}% ${cr.x * 100}%)`
     : 'none';
 }
 
+export function applyViewTransformToElement(el, { clip = true } = {}) {
+  if (!el) return;
+  el.style.transformOrigin = 'center center';
+  el.style.transform = getViewTransformCss();
+  if (clip) {
+    el.style.clipPath = getCropClipPath();
+  }
+}
+
 export function applyReferenceTransform() {
   applyViewTransformToElement(referenceImage);
+  applyViewTransformToElement(canvas);
+  updateCropOverlay();
 }
 
 export function isTransformKeyActive() {
@@ -106,6 +109,7 @@ export function updateTransformKey(e, isDown) {
     state.keyState.s = isDown;
   } else if (key === 'c') {
     state.keyState.c = isDown;
+    updateCropOverlay();
   } else if (e.key === ' ') {
     state.keyState.space = isDown;
     e.preventDefault();
@@ -124,21 +128,153 @@ export function getCropSurfaceRect(surface) {
   return surface.getBoundingClientRect();
 }
 
-export function getNormalizedCropRect(surface, startClientX, startClientY, endClientX, endClientY) {
-  const rect = getCropSurfaceRect(surface);
+export function getUntransformedElementRect(el) {
+  const previousTransform = el.style.transform;
+  const previousClipPath = el.style.clipPath;
+  el.style.transform = 'none';
+  el.style.clipPath = 'none';
+  const rect = el.getBoundingClientRect();
+  el.style.transform = previousTransform;
+  el.style.clipPath = previousClipPath;
+  return rect;
+}
+
+export function getViewTargetForSurface(surface) {
+  if (surface === imageContainer && referenceImage.style.display !== 'none') {
+    return referenceImage;
+  }
+  if (surface === imageContainer) return null;
+  return surface;
+}
+
+export function clientPointToElementLocal(el, clientX, clientY) {
+  if (!el) return null;
+  const rect = getUntransformedElementRect(el);
   if (rect.width === 0 || rect.height === 0) return null;
 
-  const left = clamp(Math.min(startClientX, endClientX), rect.left, rect.right);
-  const right = clamp(Math.max(startClientX, endClientX), rect.left, rect.right);
-  const top = clamp(Math.min(startClientY, endClientY), rect.top, rect.bottom);
-  const bottom = clamp(Math.max(startClientY, endClientY), rect.top, rect.bottom);
-  const x = (left - rect.left) / rect.width;
-  const y = (top - rect.top) / rect.height;
-  const w = (right - left) / rect.width;
-  const h = (bottom - top) / rect.height;
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  const offPxX = state.viewState.offsetX * rect.width;
+  const offPxY = state.viewState.offsetY * rect.height;
+  const scale = state.viewState.scale || 1;
+  const r = state.viewState.rotation;
+  const dx = clientX - rect.left - cx - offPxX;
+  const dy = clientY - rect.top - cy - offPxY;
+  const ux = dx / scale;
+  const uy = dy / scale;
+  const cos = Math.cos(r);
+  const sin = Math.sin(r);
+
+  return {
+    x: cx + ux * cos + uy * sin,
+    y: cy - ux * sin + uy * cos,
+    rect
+  };
+}
+
+export function getCanvasPointFromClient(clientX, clientY) {
+  const local = clientPointToElementLocal(canvas, clientX, clientY);
+  if (!local) return {x: 0, y: 0};
+
+  return {
+    x: local.x * canvas.width / local.rect.width,
+    y: local.y * canvas.height / local.rect.height
+  };
+}
+
+export function clientPointToNormalizedView(el, clientX, clientY) {
+  const local = clientPointToElementLocal(el, clientX, clientY);
+  if (!local) return null;
+
+  return {
+    x: clamp(local.x / local.rect.width, 0, 1),
+    y: clamp(local.y / local.rect.height, 0, 1)
+  };
+}
+
+export function getNormalizedCropRect(surface, startClientX, startClientY, endClientX, endClientY) {
+  const target = getViewTargetForSurface(surface);
+  const start = clientPointToNormalizedView(target, startClientX, startClientY);
+  const end = clientPointToNormalizedView(target, endClientX, endClientY);
+  if (!start || !end) return null;
+
+  const x = Math.min(start.x, end.x);
+  const y = Math.min(start.y, end.y);
+  const w = Math.abs(end.x - start.x);
+  const h = Math.abs(end.y - start.y);
 
   if (w === 0 || h === 0) return null;
   return {x, y, w, h};
+}
+
+function ensureCropOverlay() {
+  if (cropOverlay || !imageContainer) return cropOverlay;
+
+  cropOverlay = document.createElement('div');
+  cropOverlay.className = 'crop-dim-overlay';
+  for (let i = 0; i < 4; i++) {
+    const part = document.createElement('div');
+    part.className = 'crop-dim-part';
+    cropOverlay.appendChild(part);
+  }
+  imageContainer.appendChild(cropOverlay);
+  return cropOverlay;
+}
+
+export function updateCropOverlay() {
+  if (!imageContainer) return;
+  const overlay = ensureCropOverlay();
+  const cr = state.viewState.cropRect;
+  const shouldShow = Boolean(state.keyState.c && cr && referenceImage.style.display !== 'none');
+
+  if (!shouldShow) {
+    overlay.style.display = 'none';
+    return;
+  }
+
+  const rect = getUntransformedElementRect(referenceImage);
+  const containerRect = imageContainer.getBoundingClientRect();
+  overlay.style.display = 'block';
+  overlay.style.left = `${rect.left - containerRect.left}px`;
+  overlay.style.top = `${rect.top - containerRect.top}px`;
+  overlay.style.width = `${rect.width}px`;
+  overlay.style.height = `${rect.height}px`;
+  applyViewTransformToElement(overlay, { clip: false });
+
+  const [top, left, right, bottom] = overlay.children;
+  top.style.left = '0';
+  top.style.top = '0';
+  top.style.width = '100%';
+  top.style.height = `${cr.y * 100}%`;
+
+  left.style.left = '0';
+  left.style.top = `${cr.y * 100}%`;
+  left.style.width = `${cr.x * 100}%`;
+  left.style.height = `${cr.h * 100}%`;
+
+  right.style.left = `${(cr.x + cr.w) * 100}%`;
+  right.style.top = `${cr.y * 100}%`;
+  right.style.width = `${(1 - cr.x - cr.w) * 100}%`;
+  right.style.height = `${cr.h * 100}%`;
+
+  bottom.style.left = '0';
+  bottom.style.top = `${(cr.y + cr.h) * 100}%`;
+  bottom.style.width = '100%';
+  bottom.style.height = `${(1 - cr.y - cr.h) * 100}%`;
+}
+
+export function recenterViewOnCrop(cropRect) {
+  if (!cropRect) return;
+  const dx = (cropRect.x + cropRect.w / 2 - 0.5) * canvas.width;
+  const dy = (cropRect.y + cropRect.h / 2 - 0.5) * canvas.height;
+  const scale = state.viewState.scale || 1;
+  const cos = Math.cos(state.viewState.rotation);
+  const sin = Math.sin(state.viewState.rotation);
+  const transformedDx = scale * (dx * cos - dy * sin);
+  const transformedDy = scale * (dx * sin + dy * cos);
+
+  state.viewState.offsetX -= transformedDx / Math.max(canvas.width, 1);
+  state.viewState.offsetY -= transformedDy / Math.max(canvas.height, 1);
 }
 
 export function beginTransformGesture(e, surface) {
@@ -205,6 +341,9 @@ export function endTransformGesture(e) {
   if (gesture.mode === 'crop' && Math.hypot(dx, dy) < 3) {
     state.viewState.cropRect = null;
     applyViewChange();
+  } else if (gesture.mode === 'crop' && state.viewState.cropRect) {
+    recenterViewOnCrop(state.viewState.cropRect);
+    applyViewChange();
   }
 
   const after = cloneViewState();
@@ -218,6 +357,7 @@ export function endTransformGesture(e) {
     gesture.surface.releasePointerCapture(e.pointerId);
   }
   state.transformGesture = null;
+  updateCropOverlay();
 }
 
 export function applyViewChange() {

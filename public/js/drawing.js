@@ -1,7 +1,7 @@
 import { state, PMIN } from './state.js';
 import { canvas, ctx, imageContainer } from './dom.js';
 import { resizeCanvasForFreeMode, resizeCanvas, updateNextImageButtonState } from './images.js';
-import { applyCanvasViewTransform, applyCropClip, getBaseCoordinates, isTransformKeyActive, beginTransformGesture, updateTransformGesture, endTransformGesture, resetViewState, applyReferenceTransform, applyViewChange } from './transform.js';
+import { applyCanvasViewTransform, applyCropClip, getBaseCoordinates, getCanvasPointFromClient, isTransformKeyActive, beginTransformGesture, updateTransformGesture, endTransformGesture, resetViewState, applyReferenceTransform, applyViewChange } from './transform.js';
 import { updateGridOverlays } from './grid.js';
 
 export function setupCanvas() {
@@ -40,14 +40,7 @@ export function setupCanvas() {
 }
 
 export function getCanvasCoordinates(e) {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-
-  const x = (e.clientX - rect.left) * scaleX;
-  const y = (e.clientY - rect.top) * scaleY;
-
-  return {x, y};
+  return getCanvasPointFromClient(e.clientX, e.clientY);
 }
 
 export function getPressure(e) {

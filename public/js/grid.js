@@ -1,6 +1,6 @@
 import { canvas, referenceImage, referenceGridCanvas, drawingGridCanvas, gridDivisionsInput, gridToggle } from './dom.js';
 import { clamp } from './utils.js';
-import { applyViewTransformToElement } from './transform.js';
+import { applyViewTransformToElement, getUntransformedElementRect } from './transform.js';
 
 export function getGridDivisions() {
   if (!gridDivisionsInput) return 0;
@@ -16,11 +16,8 @@ export function isGridVisible() {
 export function syncOverlayToTarget(overlay, target) {
   if (!overlay || !target || !target.parentElement) return;
 
-  const previousTransform = target.style.transform;
-  target.style.transform = 'none';
   const containerRect = target.parentElement.getBoundingClientRect();
-  const targetRect = target.getBoundingClientRect();
-  target.style.transform = previousTransform;
+  const targetRect = getUntransformedElementRect(target);
 
   overlay.style.left = `${targetRect.left - containerRect.left}px`;
   overlay.style.top = `${targetRect.top - containerRect.top}px`;
