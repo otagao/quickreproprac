@@ -2,6 +2,7 @@ export const canvas = document.getElementById('drawingCanvas');
 export const ctx = canvas.getContext('2d');
 export const imageModeBtn = document.getElementById('imageModeBtn');
 export const freeModeBtn = document.getElementById('freeModeBtn');
+export const langToggleBtn = document.getElementById('langToggleBtn');
 export const folderSection = document.getElementById('folderSection');
 export const timerSection = document.getElementById('timerSection');
 export const workspace = document.getElementById('workspace');

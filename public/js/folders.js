@@ -2,6 +2,7 @@ import { state } from './state.js';
 import { folderListEl, statusText } from './dom.js';
 import { shuffleArray } from './utils.js';
 import { displayCurrentImage, updateImageCounter } from './images.js';
+import { t } from './i18n.js';
 
 export async function loadFolders() {
   try {
@@ -9,7 +10,7 @@ export async function loadFolders() {
     state.folders = await response.json();
 
     if (state.folders.length === 0) {
-      folderListEl.innerHTML = '<p class="loading">No folders found. Create folders with images in the application directory.</p>';
+      folderListEl.innerHTML = `<p class="loading" data-i18n="noFoldersFound">${t('noFoldersFound')}</p>`;
     } else {
       folderListEl.innerHTML = '';
       state.folders.forEach(folder => {
@@ -19,7 +20,7 @@ export async function loadFolders() {
     }
   } catch (error) {
     console.error('Error loading folders:', error);
-    folderListEl.innerHTML = '<p class="loading">Error loading folders</p>';
+    folderListEl.innerHTML = `<p class="loading" data-i18n="errorLoadingFolders">${t('errorLoadingFolders')}</p>`;
   }
 }
 
@@ -92,7 +93,7 @@ export function toggleFolderSelection(folderPath, element) {
 
 export async function loadImages() {
   if (state.selectedFolders.length === 0) {
-    alert('Please select at least one folder');
+    alert(t('selectAtLeastOneFolder'));
     return;
   }
 
@@ -102,8 +103,8 @@ export async function loadImages() {
     state.images = await response.json();
 
     if (state.images.length === 0) {
-      alert('No images found in selected folders');
-      statusText.textContent = 'No images found';
+      alert(t('noImagesFoundSelected'));
+      statusText.textContent = t('noImagesFound');
       return;
     }
 
@@ -111,11 +112,11 @@ export async function loadImages() {
     shuffleArray(state.images);
     state.currentImageIndex = 0;
 
-    statusText.textContent = `Loaded ${state.images.length} images`;
+    statusText.textContent = t('loadedImages', { n: state.images.length });
     updateImageCounter();
     displayCurrentImage();
   } catch (error) {
     console.error('Error loading images:', error);
-    alert('Error loading images');
+    alert(t('errorLoadingImages'));
   }
 }

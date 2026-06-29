@@ -1,5 +1,6 @@
 export const state = {
   folders: [], selectedFolders: [], images: [], currentImageIndex: 0,
+  language: 'ja',
   timerInterval: null, remainingTime: 0, currentMode: 'image',
   savedCanvases: [], switchCounter: 0, maxSwitches: 10,
   isDrawing: false, currentTool: 'pen', penColor: '#000000', penSize: 3,
