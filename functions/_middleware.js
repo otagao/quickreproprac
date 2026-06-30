@@ -15,7 +15,9 @@ export async function onRequest(context) {
     return context.next();
   }
 
-  if (url.hostname === PAGES_HOST) {
+  // 正規ホストだけでなく、デプロイごとのプレビューエイリアス
+  // (<hash>.quickreproprac.pages.dev) も含めて *.pages.dev を全て塞ぐ。
+  if (url.hostname === PAGES_HOST || url.hostname.endsWith(`.${PAGES_HOST}`)) {
     const path = url.pathname === "/" ? "" : url.pathname;
     return Response.redirect(`${CANONICAL_PREFIX}${path}${url.search}`, 302);
   }
