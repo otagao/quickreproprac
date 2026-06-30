@@ -57,11 +57,17 @@ wrangler pages project create quickreproprac --production-branch main
 
 ## Step 3: Pages へ静的サイトをデプロイ
 
-デプロイ対象ディレクトリは `public/`（`public/functions/_middleware.js` も含まれる）。
+デプロイ対象（静的アセット）ディレクトリは `public/`。Pages Functions の
+`functions/_middleware.js` は**アセットディレクトリの兄弟＝リポジトリルート**に置く必要があり、
+`public/` の中ではない（wrangler は cwd 直下の `functions/` を検出してコンパイルする）。
+したがって**リポジトリルートから**次を実行すること。
 
 ```powershell
-wrangler pages deploy public --project-name quickreproprac
+wrangler pages deploy public --project-name quickreproprac --branch main
 ```
+
+成功時の出力に `✨ Compiled Worker successfully` と `✨ Uploading Functions bundle` が
+表示されれば middleware が同梱されている。表示されない場合は `functions/` の位置を確認すること。
 
 成功すると `https://quickreproprac.pages.dev` でアクセス可能になる（ただし _middleware.js により tools.otagao.net へ 302 リダイレクトされる）。
 
@@ -161,7 +167,7 @@ Workers & Pages → ルート設定で `/quickreproprac/*` が既存の Worker �
 
 ### `_middleware.js` が動作しない（リダイレクトされない）
 
-- Pages のデプロイに `public/functions/_middleware.js` が含まれているか確認する
+- Pages のデプロイ出力に `✨ Uploading Functions bundle` が表示されているか確認する（`functions/` はリポジトリルート直下に置くこと）
 - `wrangler pages deploy public` の出力に `functions/_middleware.js` が含まれているか確認する
 
 ### Worker が 404 を返す
