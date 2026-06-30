@@ -1,0 +1,22 @@
+# quickreproprac-router Worker
+# このWorkerは tools.otagao.net/quickreproprac/* へのリクエストを
+# quickreproprac.pages.dev へプロキシする。
+# 既存の tools-router Worker（itf-gpa-rescaler 用）とは独立した別 Worker として動作する。
+#
+# デプロイ手順: リポジトリ直下の DEPLOY.md を参照のこと。
+# ORIGIN_BYPASS_TOKEN はこのファイルに平文で記述せず、
+#   wrangler secret put ORIGIN_BYPASS_TOKEN
+# で設定すること（要確認: 値は Pages 側の同名環境変数と一致させること）。
+
+name = "quickreproprac-router"
+main = "tools-router.js"
+compatibility_date = "2025-01-01"  # 要確認: https://developers.cloudflare.com/workers/configuration/compatibility-dates/ で最新日付を確認して更新を推奨
+workers_dev = false
+
+[[routes]]
+pattern = "tools.otagao.net/quickreproprac"
+zone_name = "otagao.net"
+
+[[routes]]
+pattern = "tools.otagao.net/quickreproprac/*"
+zone_name = "otagao.net"

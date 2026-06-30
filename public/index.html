@@ -22,11 +22,12 @@
       </div>
 
       <div class="control-section" id="folderSection">
-        <h3 data-i18n="folderSelection">フォルダ選択</h3>
-        <div id="folderList" class="folder-list">
-          <p class="loading" data-i18n="loadingFolders">フォルダを読み込み中...</p>
+        <h3 data-i18n="dropZoneTitle">参照画像</h3>
+        <div id="dropZone" class="drop-zone">
+          <p class="drop-zone-prompt" data-i18n="dropZonePrompt">ここに画像をドロップ、またはクリックして選択</p>
         </div>
-        <button id="loadImagesBtn" class="btn-primary" data-i18n="loadImages">画像を読み込む</button>
+        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        <p class="privacy-note" data-i18n="privacyNote">入力した画像はブラウザ内で処理が完結するため、サーバーに送信されず流出する心配はありません。</p>
       </div>
 
       <div class="control-section" id="timerSection">
@@ -85,12 +86,12 @@
       </div>
 
       <div class="status-section">
-        <p id="statusText" data-i18n="selectFoldersPrompt">フォルダを選択して画像を読み込んでください</p>
+        <p id="statusText" data-i18n="dropImagePrompt">画像をドロップして練習を開始</p>
         <p id="imageCounter">0 / 0</p>
         <p id="timerDisplay">--:--</p>
       </div>
 
-      <div class="control-section">
+      <div class="control-section" id="exportSection">
         <button id="exportBtn" class="btn-primary" disabled data-i18n="exportSavedDrawings">保存された模写をエクスポート</button>
         <p id="exportInfo" style="font-size: 12px; color: #808080; margin-top: 8px;"><span data-i18n="savedDrawings">保存された模写:</span> <span id="savedCount">0</span></p>
       </div>

@@ -1,25 +1,15 @@
 import { state } from './state.js';
-import { canvas, imageModeBtn, freeModeBtn, folderSection, timerSection, workspace, freeModeMaxSwitches, nextImageBtn, intervalInput, statusText, imageCounter, referenceImage, noImageText } from './dom.js';
+import { canvas, imageModeBtn, freeModeBtn, folderSection, timerSection, exportSection, workspace, freeModeMaxSwitches, nextImageBtn, intervalInput, statusText, imageCounter, referenceImage, noImageText } from './dom.js';
 import { resetViewState, applyViewChange } from './transform.js';
-import { stopTimer, updateTimerDisplay } from './timer.js';
+import { stopTimer, updateTimerDisplay, stopStopwatch } from './timer.js';
 import { clearCanvas } from './drawing.js';
 import { saveCurrentCanvas, updateSavedCount } from './export.js';
 import { t } from './i18n.js';
 
 export function displayCurrentImage() {
+  // この関数はフリーモードの画像切替では使われない。
+  // イメージモードではdropzone.jsのloadImageFile()が直接referenceImageを操作する。
   if (state.images.length === 0) return;
-
-  const imagePath = `/images/${state.images[state.currentImageIndex]}`;
-  referenceImage.src = imagePath;
-  referenceImage.style.display = 'block';
-  noImageText.style.display = 'none';
-
-  // Wait for image to load to get its aspect ratio
-  referenceImage.onload = () => {
-    resetViewState();
-    resizeCanvas();
-  };
-
   updateImageCounter();
 }
 
@@ -28,63 +18,72 @@ export function switchMode(mode) {
   resetViewState();
 
   if (mode === 'free') {
-    // Free mode: hide folder section, show timer, canvas only
+    // フリーモード: D&Dエリア非表示、タイマー/エクスポート表示、キャンバスのみ
     folderSection.style.display = 'none';
     timerSection.style.display = 'block';
+    if (exportSection) exportSection.style.display = 'block';
     freeModeMaxSwitches.style.display = 'block';
     workspace.classList.add('free-mode');
 
-    // Update mode buttons
+    // モードボタン更新
     imageModeBtn.classList.remove('active');
     freeModeBtn.classList.add('active');
 
-    // Stop timer if running
+    // ストップウォッチ停止
+    stopStopwatch();
+
+    // カウントダウンタイマー停止
     stopTimer();
 
-    // Reset switch counter and saved canvases
+    // imageCounterを表示に戻す
+    imageCounter.style.display = '';
+
+    // スイッチカウンタとキャンバスリセット
     state.switchCounter = 0;
     state.savedCanvases = [];
     updateSavedCount();
 
-    // Resize canvas to fixed square size
+    // キャンバスを正方形固定サイズにリサイズ
     resizeCanvasForFreeMode();
 
     statusText.textContent = t('freeModeLabel');
     imageCounter.textContent = '-- / --';
 
-    // Update button label for Free Mode
+    // フリーモードのボタンラベル更新
     nextImageBtn.textContent = t('nextCanvas');
 
-    // Update Next Image button state
+    // 次の画像ボタン状態更新
     updateNextImageButtonState();
   } else {
-    // Image mode: show folder/timer sections, show both panels
+    // イメージモード: D&Dエリア表示、タイマー/エクスポートセクション非表示
     folderSection.style.display = 'block';
-    timerSection.style.display = 'block';
+    timerSection.style.display = 'none';
+    if (exportSection) exportSection.style.display = 'none';
     freeModeMaxSwitches.style.display = 'none';
     workspace.classList.remove('free-mode');
 
-    // Update mode buttons
+    // モードボタン更新
     imageModeBtn.classList.add('active');
     freeModeBtn.classList.remove('active');
 
-    // Reset switch counter and saved canvases
+    // imageCounterを非表示
+    imageCounter.style.display = 'none';
+
+    // カウントダウンタイマー停止・ストップウォッチ停止
+    stopTimer();
+    stopStopwatch();
+
+    // スイッチカウンタとキャンバスリセット
     state.switchCounter = 0;
     state.savedCanvases = [];
     updateSavedCount();
 
-    // Resize canvas to match reference image
-    if (state.images.length > 0) {
-      resizeCanvas();
-      statusText.textContent = t('loadedImages', { n: state.images.length });
-    } else {
-      statusText.textContent = t('selectFoldersPrompt');
-    }
+    statusText.textContent = t('dropImagePrompt');
 
-    // Update button label for Image Mode
+    // イメージモードのボタンラベル更新（ボタン自体は非表示セクション内）
     nextImageBtn.textContent = t('nextImage');
 
-    // Update Next Image button state
+    // 次の画像ボタン状態更新
     updateNextImageButtonState();
   }
 
@@ -252,12 +251,5 @@ export function updateDynamicTexts() {
   }
 
   nextImageBtn.textContent = t('nextImage');
-
-  if (state.timerInterval) {
-    statusText.textContent = t('autoSwitchActive');
-  } else if (state.images.length > 0) {
-    statusText.textContent = t('loadedImages', { n: state.images.length });
-  } else {
-    statusText.textContent = t('selectFoldersPrompt');
-  }
+  statusText.textContent = t('dropImagePrompt');
 }

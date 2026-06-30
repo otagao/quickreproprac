@@ -1,6 +1,5 @@
 import { state } from './state.js';
-import { imageModeBtn, freeModeBtn, langToggleBtn, loadImagesBtn, startTimerBtn, stopTimerBtn, nextImageBtn, penSizeSlider, penSizeValue, gridDivisionsInput, gridToggle, eraserBtn, penBtn, clearBtn, exportBtn } from './dom.js';
-import { loadImages } from './folders.js';
+import { imageModeBtn, freeModeBtn, langToggleBtn, startTimerBtn, stopTimerBtn, nextImageBtn, penSizeSlider, penSizeValue, gridDivisionsInput, gridToggle, eraserBtn, penBtn, clearBtn, exportBtn } from './dom.js';
 import { switchMode, nextImage } from './images.js';
 import { startTimer, stopTimer } from './timer.js';
 import { getGridDivisions, updateGridOverlays } from './grid.js';
@@ -18,7 +17,6 @@ export function setupEventListeners() {
     setLanguage(getCurrentLang() === 'ja' ? 'en' : 'ja');
   });
 
-  loadImagesBtn.addEventListener('click', loadImages);
   startTimerBtn.addEventListener('click', startTimer);
   stopTimerBtn.addEventListener('click', stopTimer);
   nextImageBtn.addEventListener('click', nextImage);

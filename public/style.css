@@ -432,6 +432,43 @@ label {
   background: rgba(0, 0, 0, 0.45);
 }
 
+/* Drop Zone */
+.drop-zone {
+  border: 2px dashed #4a4a4a;
+  border-radius: 6px;
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  background-color: #1a1a1a;
+  transition: border-color 0.2s, background-color 0.2s;
+  margin-bottom: 10px;
+}
+
+.drop-zone:hover {
+  border-color: #4a9eff;
+  background-color: #1e2a3a;
+}
+
+.drop-zone.drag-over {
+  border-color: #4a9eff;
+  background-color: #1e2a3a;
+  box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.25);
+}
+
+.drop-zone-prompt {
+  color: #808080;
+  font-size: 13px;
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+.privacy-note {
+  font-size: 11px;
+  color: #606060;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

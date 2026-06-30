@@ -10,6 +10,8 @@ export const state = {
   strokes: [], historyStack: [], redoStack: [], currentStroke: null,
   viewState: { scale:1, rotation:0, offsetX:0, offsetY:0, cropRect:null },
   keyState: { r:false, s:false, c:false, space:false },
-  transformGesture: null
+  transformGesture: null,
+  elapsedInterval: null,
+  elapsedSeconds: 0
 };
 export const PMIN = 0.3;

@@ -4,6 +4,42 @@ import { nextImage } from './images.js';
 import { updateSavedCount } from './export.js';
 import { t } from './i18n.js';
 
+// --- ストップウォッチ（イメージモード用）---
+
+export function startStopwatch() {
+  stopStopwatch();
+  state.elapsedInterval = setInterval(() => {
+    state.elapsedSeconds++;
+    updateStopwatchDisplay();
+  }, 1000);
+  updateStopwatchDisplay();
+}
+
+export function stopStopwatch() {
+  if (state.elapsedInterval) {
+    clearInterval(state.elapsedInterval);
+    state.elapsedInterval = null;
+  }
+}
+
+export function resetStopwatch() {
+  stopStopwatch();
+  state.elapsedSeconds = 0;
+  updateStopwatchDisplay();
+}
+
+export function updateStopwatchDisplay() {
+  const totalSecs = state.elapsedSeconds;
+  const hours = Math.floor(totalSecs / 3600);
+  const minutes = Math.floor((totalSecs % 3600) / 60);
+  const seconds = totalSecs % 60;
+  if (hours > 0) {
+    timerDisplay.textContent = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  } else {
+    timerDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  }
+}
+
 export function startTimer() {
   stopTimer(); // Stop any existing timer
 
